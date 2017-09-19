@@ -23,7 +23,7 @@ script:
   -  .travis/precommit.sh
   -  docker run -i --rm -v "$PWD:/py_unittest" paddlepaddle/paddle:latest /bin/bash -c 
     'cd /py_unittest; sh .travis/unittest.sh'
-
+  - .travis/deploy.sh
 notifications:
   email:
     on_success: change
