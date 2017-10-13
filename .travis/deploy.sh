@@ -4,6 +4,20 @@ function abort(){
     exit 1
 }
 
+if [[ "$TRAVIS_BRANCH" =~ ^v[[:digit:]]+\.[[:digit:]]+(\.[[:digit:]]+)?(-\S*)?$ ]]
+then
+    # Production Deploy
+    echo "Deploying to PROD"
+elif [ "$TRAVIS_BRANCH" == "develop" ]
+then
+    # Development Deploy
+    echo "Deploying to DEVELOP"
+else
+    # All other branches should be ignored
+    echo "Cannot deploy image, invalid branch: $TRAVIS_BRANCH"
+    exit 1
+fi
+
 trap 'abort' 0
 
 directory_name="build"
@@ -24,6 +38,25 @@ mv index.html $directory_name/index
 
 cp -a .tools/. $directory_name/.tools
 
+### pull PaddlePaddle.org app and run the deploy_documentation command
+# https://github.com/PaddlePaddle/PaddlePaddle.org/archive/transform-deploy-documentation.zip
+
+curl -LOk https://github.com/PaddlePaddle/PaddlePaddle.org/archive/transform-deploy-documentation.zip
+
+unzip transform-deploy-documentation.zip
+
+cd PaddlePaddle.org-transform-deploy-documentation/
+
+cd portal/
+
+sudo pip install -r requirements.txt
+
+mkdir ./tmp
+python manage.py deploy_documentation models $TRAVIS_BRANCH ./tmp
+
+###
+cd ../..
+
 # deploy to remote server
 openssl aes-256-cbc -d -a -in ubuntu.pem.enc -out ubuntu.pem -k $DEC_PASSWD
 
@@ -31,11 +64,15 @@ eval "$(ssh-agent -s)"
 chmod 400 ubuntu.pem
 
 ssh-add ubuntu.pem
-rsync -r build/ ubuntu@52.76.173.135:/var/content/models
+rsync -r PaddlePaddle.org-transform-deploy-documentation/portal/tmp/ ubuntu@52.76.173.135:/var/content_staging/docs
 
 chmod 644 ubuntu.pem
 rm ubuntu.pem
 
 rm -rf $directory_name
+
+rm -rf ./tmp
+rm -rf PaddlePaddle.org-transform-deploy-documentation/
+rm -rf transform-deploy-documentation.zip
 
 trap : 0
