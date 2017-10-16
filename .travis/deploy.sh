@@ -39,13 +39,13 @@ mv index.html $directory_name/index
 cp -a .tools/. $directory_name/.tools
 
 ### pull PaddlePaddle.org app and run the deploy_documentation command
-# https://github.com/PaddlePaddle/PaddlePaddle.org/archive/transform-deploy-documentation.zip
+# https://github.com/PaddlePaddle/PaddlePaddle.org/archive/master.zip
 
-curl -LOk https://github.com/PaddlePaddle/PaddlePaddle.org/archive/transform-deploy-documentation.zip
+curl -LOk https://github.com/PaddlePaddle/PaddlePaddle.org/archive/master.zip
 
-unzip transform-deploy-documentation.zip
+unzip master.zip
 
-cd PaddlePaddle.org-transform-deploy-documentation/
+cd PaddlePaddle.org-master/
 
 cd portal/
 
@@ -64,7 +64,7 @@ eval "$(ssh-agent -s)"
 chmod 400 ubuntu.pem
 
 ssh-add ubuntu.pem
-rsync -r PaddlePaddle.org-transform-deploy-documentation/portal/tmp/ ubuntu@52.76.173.135:/var/content_staging/docs
+rsync -r PaddlePaddle.org-master/portal/tmp/ ubuntu@52.76.173.135:/var/content_staging/docs
 
 chmod 644 ubuntu.pem
 rm ubuntu.pem
@@ -72,7 +72,7 @@ rm ubuntu.pem
 rm -rf $directory_name
 
 rm -rf ./tmp
-rm -rf PaddlePaddle.org-transform-deploy-documentation/
-rm -rf transform-deploy-documentation.zip
+rm -rf PaddlePaddle.org-master/
+rm -rf master.zip
 
 trap : 0
