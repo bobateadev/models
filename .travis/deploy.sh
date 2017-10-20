@@ -29,51 +29,12 @@ fi
 
 mkdir $directory_name
 
-mkdir $directory_name/.tools
-mkdir $directory_name/index
+DEPLOY_DOCS_SH=https://raw.githubusercontent.com/PaddlePaddle/PaddlePaddle.org/develop/scripts/deploy/deploy_docs.sh
 
-python .pre-commit-hooks/convert_markdown_into_html.py README.md
-
-mv index.html $directory_name/index
-
-cp -a .tools/. $directory_name/.tools
-
-### pull PaddlePaddle.org app and run the deploy_documentation command
-# https://github.com/PaddlePaddle/PaddlePaddle.org/archive/master.zip
-
-curl -LOk https://github.com/PaddlePaddle/PaddlePaddle.org/archive/master.zip
-
-unzip master.zip
-
-cd PaddlePaddle.org-master/
-
-cd portal/
-
-sudo pip install -r requirements.txt
+cd ..
 
 mkdir ./tmp
-python manage.py deploy_documentation models $TRAVIS_BRANCH ./tmp
 
-###
-cd ../..
-
-# deploy to remote server
-openssl aes-256-cbc -d -a -in ubuntu.pem.enc -out ubuntu.pem -k $DEC_PASSWD
-
-eval "$(ssh-agent -s)"
-chmod 400 ubuntu.pem
-
-ssh-add ubuntu.pem
-rsync -r PaddlePaddle.org-master/portal/tmp/ ubuntu@52.76.173.135:/var/content_staging/docs
-rsync -r PaddlePaddle.org-master/portal/tmp/ ubuntu@52.76.173.135:/var/content/docs
-
-chmod 644 ubuntu.pem
-rm ubuntu.pem
-
-rm -rf $directory_name
-
-rm -rf ./tmp
-rm -rf PaddlePaddle.org-master/
-rm -rf master.zip
+curl $DEPLOY_DOCS_SH | bash -s $CONTENT_DEC_PASSWD $TRAVIS_BRANCH models ./tmp models
 
 trap : 0
