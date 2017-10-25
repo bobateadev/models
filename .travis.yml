@@ -16,7 +16,7 @@ addons:
       - python
       - python-pip
       - python2.7-dev
-  ssh_known_hosts: 52.76.173.135
+  ssh_known_hosts: staging.paddlepaddle.org
 before_install:
   -  sudo pip install -U virtualenv pre-commit pip
   -  docker pull paddlepaddle/paddle:latest
@@ -24,7 +24,11 @@ script:
   -  .travis/precommit.sh
   -  docker run -i --rm -v "$PWD:/py_unittest" paddlepaddle/paddle:latest /bin/bash -c 
     'cd /py_unittest; sh .travis/unittest.sh'
-  - .travis/deploy.sh
+  - |
+    export DEPLOY_DOCS_SH=https://raw.githubusercontent.com/PaddlePaddle/PaddlePaddle.org/develop/scripts/deploy/deploy_docs.sh
+    export MODELS_DIR=`pwd`
+    cd ..
+    if [[ "$TRAVIS_BRANCH" == "develop" ]] || [[ "$TRAVIS_BRANCH" =~ ^v[[:digit:]]+\.[[:digit:]]+(\.[[:digit:]]+)?(-\S*)?$ ]]; then curl $DEPLOY_DOCS_SH | bash -s $CONTENT_DEC_PASSWD $TRAVIS_BRANCH $MODELS_DIR; else echo "not develop branch, no deploy"; fi;
 notifications:
   email:
     on_success: change
