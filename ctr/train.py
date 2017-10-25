@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-import os
 import argparse
 import gzip
 
@@ -97,7 +95,7 @@ def train():
                     args.model_output_prefix, event.pass_id, event.batch_id,
                     result.cost)
                 with gzip.open(path, 'w') as f:
-                    params.to_tar(f)
+                    trainer.save_parameter_to_tar(f)
 
     trainer.train(
         reader=paddle.batch(

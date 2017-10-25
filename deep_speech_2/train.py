@@ -6,7 +6,7 @@ from __future__ import print_function
 import argparse
 import functools
 import paddle.v2 as paddle
-from models.model import DeepSpeech2Model
+from model_utils.model import DeepSpeech2Model
 from data_utils.data import DataGenerator
 from utils.utility import add_arguments, print_arguments
 
@@ -16,7 +16,7 @@ add_arg = functools.partial(add_arguments, argparser=parser)
 add_arg('batch_size',       int,    256,    "Minibatch size.")
 add_arg('trainer_count',    int,    8,      "# of Trainers (CPUs or GPUs).")
 add_arg('num_passes',       int,    200,    "# of training epochs.")
-add_arg('num_proc_data',    int,    12,     "# of CPUs for data preprocessing.")
+add_arg('num_proc_data',    int,    16,     "# of CPUs for data preprocessing.")
 add_arg('num_conv_layers',  int,    2,      "# of convolution layers.")
 add_arg('num_rnn_layers',   int,    3,      "# of recurrent layers.")
 add_arg('rnn_layer_size',   int,    2048,   "# of recurrent cells per layer.")
@@ -25,6 +25,7 @@ add_arg('num_iter_print',   int,    100,    "Every # iterations for printing "
 add_arg('learning_rate',    float,  5e-4,   "Learning rate.")
 add_arg('max_duration',     float,  27.0,   "Longest audio duration allowed.")
 add_arg('min_duration',     float,  0.0,    "Shortest audio duration allowed.")
+add_arg('test_off',         bool,   False,  "Turn off testing.")
 add_arg('use_sortagrad',    bool,   True,   "Use SortaGrad or not.")
 add_arg('use_gpu',          bool,   True,   "Use GPU or not.")
 add_arg('use_gru',          bool,   False,  "Use GRUs instead of simple RNNs.")
@@ -41,14 +42,14 @@ add_arg('mean_std_path',    str,
         'data/librispeech/mean_std.npz',
         "Filepath of normalizer's mean & std.")
 add_arg('vocab_path',       str,
-        'data/librispeech/eng_vocab.txt',
+        'data/librispeech/vocab.txt',
         "Filepath of vocabulary.")
 add_arg('init_model_path',  str,
         None,
         "If None, the training starts from scratch, "
         "otherwise, it resumes from the pre-trained model.")
 add_arg('output_model_dir', str,
-        "./checkpoints",
+        "./checkpoints/libri",
         "Directory for saving checkpoints.")
 add_arg('augment_conf_path',str,
         'conf/augmentation.config',
@@ -111,12 +112,16 @@ def train():
         num_passes=args.num_passes,
         num_iterations_print=args.num_iter_print,
         output_model_dir=args.output_model_dir,
-        is_local=args.is_local)
+        is_local=args.is_local,
+        test_off=args.test_off)
 
 
 def main():
     print_arguments(args)
-    paddle.init(use_gpu=args.use_gpu, trainer_count=args.trainer_count)
+    paddle.init(use_gpu=args.use_gpu,
+                rnn_use_batch=True,
+                trainer_count=args.trainer_count,
+                log_clipping=True)
     train()
 
 

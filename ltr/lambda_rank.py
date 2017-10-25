@@ -1,14 +1,18 @@
-import os, sys
+import os
+import sys
 import gzip
-import paddle.v2 as paddle
-import numpy as np
 import functools
 import argparse
+import numpy as np
+
+import paddle.v2 as paddle
 
 
 def lambda_rank(input_dim):
     """
-    lambda_rank is a Listwise rank model, the input data and label must be sequences.
+    lambda_rank is a Listwise rank model, the input data and label
+    must be sequences.
+
     https://papers.nips.cc/paper/2971-learning-to-rank-with-nonsmooth-cost-functions.pdf
     parameters :
       input_dim, one document's dense feature vector dimension
@@ -16,6 +20,7 @@ def lambda_rank(input_dim):
     format of the dense_vector_sequence:
     [[f, ...], [f, ...], ...], f is a float or an int number
     """
+
     label = paddle.layer.data("label",
                               paddle.data_type.dense_vector_sequence(1))
     data = paddle.layer.data("data",
@@ -77,7 +82,7 @@ def train_lambda_rank(num_passes):
             print "\nTest with Pass %d, %s" % (event.pass_id, result.metrics)
             with gzip.open("lambda_rank_params_%d.tar.gz" % (event.pass_id),
                            "w") as f:
-                parameters.to_tar(f)
+                trainer.save_parameter_to_tar(f)
 
     feeding = {"label": 0, "data": 1}
     trainer.train(
@@ -88,11 +93,11 @@ def train_lambda_rank(num_passes):
 
 
 def lambda_rank_infer(pass_id):
+    """lambda_rank model inference interface
+
+    parameters:
+        pass_id : inference model in pass_id
     """
-  lambda_rank model inference interface
-  parameters:
-    pass_id : inference model in pass_id
-  """
     print "Begin to Infer..."
     input_dim = 46
     output = lambda_rank(input_dim)
@@ -109,7 +114,8 @@ def lambda_rank_infer(pass_id):
         if len(infer_data) == infer_data_num:
             break
 
-    # predict score of infer_data document. Re-sort the document base on predict score
+    # predict score of infer_data document.
+    # Re-sort the document base on predict score
     # in descending order. then we build the ranking documents
     predicitons = paddle.infer(
         output_layer=output, parameters=parameters, input=infer_data)

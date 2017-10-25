@@ -11,8 +11,8 @@ import wave
 import paddle.v2 as paddle
 import _init_paths
 from data_utils.data import DataGenerator
-from models.model import DeepSpeech2Model
-from data_utils.utils import read_manifest
+from model_utils.model import DeepSpeech2Model
+from data_utils.utility import read_manifest
 from utils.utility import add_arguments, print_arguments
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -23,9 +23,10 @@ add_arg('beam_size',        int,    500,    "Beam search width.")
 add_arg('num_conv_layers',  int,    2,      "# of convolution layers.")
 add_arg('num_rnn_layers',   int,    3,      "# of recurrent layers.")
 add_arg('rnn_layer_size',   int,    2048,   "# of recurrent cells per layer.")
-add_arg('alpha',            float,  0.36,   "Coef of LM for beam search.")
-add_arg('beta',             float,  0.25,   "Coef of WC for beam search.")
-add_arg('cutoff_prob',      float,  0.99,   "Cutoff probability for pruning.")
+add_arg('alpha',            float,  2.15,   "Coef of LM for beam search.")
+add_arg('beta',             float,  0.35,   "Coef of WC for beam search.")
+add_arg('cutoff_prob',      float,  1.0,    "Cutoff probability for pruning.")
+add_arg('cutoff_top_n',     int,    40,     "Cutoff number for pruning.")
 add_arg('use_gru',          bool,   False,  "Use GRUs instead of simple RNNs.")
 add_arg('use_gpu',          bool,   True,   "Use GPU or not.")
 add_arg('share_rnn_weights',bool,   True,   "Share input-hidden weights across "
@@ -46,7 +47,7 @@ add_arg('vocab_path',       str,
         'data/librispeech/eng_vocab.txt',
         "Filepath of vocabulary.")
 add_arg('model_path',       str,
-        './checkpoints/params.latest.tar.gz',
+        './checkpoints/libri/params.latest.tar.gz',
         "If None, the training starts from scratch, "
         "otherwise, it resumes from the pre-trained model.")
 add_arg('lang_model_path',  str,
@@ -100,7 +101,7 @@ class AsrRequestHandler(SocketServer.BaseRequestHandler):
         finish_time = time.time()
         print("Response Time: %f, Transcript: %s" %
               (finish_time - start_time, transcript))
-        self.request.sendall(transcript)
+        self.request.sendall(transcript.encode('utf-8'))
 
     def _write_to_file(self, data):
         # prepare save dir and filename
@@ -156,6 +157,8 @@ def start_server():
         pretrained_model_path=args.model_path,
         share_rnn_weights=args.share_rnn_weights)
 
+    vocab_list = [chars.encode("utf-8") for chars in data_generator.vocab_list]
+
     # prepare ASR inference handler
     def file_to_transcript(filename):
         feature = data_generator.process_utterance(filename, "")
@@ -166,7 +169,8 @@ def start_server():
             beam_beta=args.beta,
             beam_size=args.beam_size,
             cutoff_prob=args.cutoff_prob,
-            vocab_list=data_generator.vocab_list,
+            cutoff_top_n=args.cutoff_top_n,
+            vocab_list=vocab_list,
             language_model_path=args.lang_model_path,
             num_processes=1)
         return result_transcript[0]

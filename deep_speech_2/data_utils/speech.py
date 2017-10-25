@@ -44,8 +44,8 @@ class SpeechSegment(AudioSegment):
         :type filepath: basestring|file
         :param transcript: Transcript text for the speech.
         :type transript: basestring
-        :return: Audio segment instance.
-        :rtype: AudioSegment
+        :return: Speech segment instance.
+        :rtype: SpeechSegment
         """
         audio = AudioSegment.from_file(filepath)
         return cls(audio.samples, audio.sample_rate, transcript)
@@ -59,8 +59,8 @@ class SpeechSegment(AudioSegment):
         :type bytes: str
         :param transcript: Transcript text for the speech.
         :type transript: basestring
-        :return: Audio segment instance.
-        :rtype: AudioSegment
+        :return: Speech segment instance.
+        :rtype: Speech Segment
         """
         audio = AudioSegment.from_bytes(bytes)
         return cls(audio.samples, audio.sample_rate, transcript)

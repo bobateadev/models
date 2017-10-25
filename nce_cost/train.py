@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- encoding:utf-8 -*-
 import os
 import logging
 import gzip
@@ -30,8 +28,7 @@ def train(model_save_dir):
             if event.batch_id and not event.batch_id % 10:
                 logger.info("Pass %d, Batch %d, Cost %f" %
                             (event.pass_id, event.batch_id, event.cost))
-
-        if isinstance(event, paddle.event.EndPass):
+        elif isinstance(event, paddle.event.EndPass):
             result = trainer.test(
                 paddle.batch(paddle.dataset.imikolov.test(word_dict, 5), 64))
             logger.info("Test Pass %d, Cost %f" % (event.pass_id, result.cost))
@@ -40,7 +37,7 @@ def train(model_save_dir):
                                      "model_pass_%05d.tar.gz" % event.pass_id)
             logger.info("Save model into %s ..." % save_path)
             with gzip.open(save_path, "w") as f:
-                parameters.to_tar(f)
+                trainer.save_parameter_to_tar(f)
 
     trainer.train(
         paddle.batch(

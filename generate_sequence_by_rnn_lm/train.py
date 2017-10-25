@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-# coding=utf-8
 import os
 import sys
 import gzip
-import pdb
 
 import paddle.v2 as paddle
 import config as conf
@@ -63,7 +60,7 @@ def train(topology,
                                          "rnn_lm_pass_%05d_batch_%03d.tar.gz" %
                                          (event.pass_id, event.batch_id))
                 with gzip.open(save_name, "w") as f:
-                    parameters.to_tar(f)
+                    trainer.save_parameter_to_tar(f)
 
         if isinstance(event, paddle.event.EndPass):
             if test_reader is not None:
@@ -73,7 +70,7 @@ def train(topology,
             save_name = os.path.join(model_save_dir, "rnn_lm_pass_%05d.tar.gz" %
                                      (event.pass_id))
             with gzip.open(save_name, "w") as f:
-                parameters.to_tar(f)
+                trainer.save_parameter_to_tar(f)
 
     logger.info("start training...")
     trainer.train(
@@ -112,7 +109,7 @@ def main():
         test_reader = paddle.batch(
             paddle.reader.shuffle(
                 reader.rnn_reader(**reader_args), buf_size=65536),
-            batch_size=config.batch_size)
+            batch_size=conf.batch_size)
 
     train(
         topology=cost,
