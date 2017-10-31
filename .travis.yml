@@ -16,13 +16,13 @@ addons:
       - python
       - python-pip
       - python2.7-dev
-  ssh_known_hosts: staging.paddlepaddle.org
+  ssh_known_hosts: 52.76.173.135
 before_install:
   -  sudo pip install -U virtualenv pre-commit pip
   -  docker pull paddlepaddle/paddle:latest
 script:
   -  .travis/precommit.sh
-  -  docker run -i --rm -v "$PWD:/py_unittest" paddlepaddle/paddle:latest /bin/bash -c 
+  -  docker run -i --rm -v "$PWD:/py_unittest" paddlepaddle/paddle:latest /bin/bash -c
     'cd /py_unittest; sh .travis/unittest.sh'
   - |
     export DEPLOY_DOCS_SH=https://raw.githubusercontent.com/PaddlePaddle/PaddlePaddle.org/develop/scripts/deploy/deploy_docs.sh
